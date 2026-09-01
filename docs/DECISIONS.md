@@ -53,3 +53,13 @@ Never rewrite contracts; note and work around minimally.
   shim forwarding all args. §13 semantics unchanged.
 - `pyproject.toml` gains `[tool.ruff] extend-exclude = ["*.ps1", "*.cmd"]` so the
   runner sources are not parsed as Python by the `lint` target.
+
+## T16 — Windows runner env
+- PS execution policy must be at least `RemoteSigned` for the *current user*;
+  a `Restricted` box refuses `powershell -NoProfile -File ...` outright
+  (set once via `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`).
+- `make.ps1` accepts the target plus option tokens as raw positional args:
+  `--dry-run` / `--BUNDLE <zip>` / `BUNDLE=<zip>` are parsed manually because
+  `-File` scripts do not bind named switches.
+- `ruff` `extend-exclude` covers `*.ps1` / `*.cmd` (see "T16 — Windows runner
+  parity").
