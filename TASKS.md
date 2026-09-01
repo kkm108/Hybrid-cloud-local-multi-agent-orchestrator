@@ -94,3 +94,31 @@ emits brief `[SEND_TO: chatgpt_1]` → chatgpt mock forwards style → gemini mo
 "generates" image placeholder → facebook dry-run outbox entry with text+image ref.
 Assert chain in routing.jsonl and outbox payload.
 Verify: `pytest tests/test_e2e_poster.py -q -m e2e`
+
+## T13 Live GPU inference validation
+Deps: T03
+`scripts/gpu_check.py --model <hf-id>` (default `Qwen/Qwen2.5-0.5B-Instruct`):
+spawn TransformersBackend; assert Device CUDA when torch.cuda.is_available(),
+else warn + CPU fallback; round-trip /status and /generate; print the §5 config
+echo verbatim. Test `tests/test_gpu_live.py` marked `gpu`, skip gracefully when
+torch absent. HF_TOKEN optional, never required.
+Verify: `pytest -q -m gpu` · manual: `python scripts/gpu_check.py`
+
+## T14 Worker-tab attach doctor
+Deps: T05
+`scripts/tab_doctor.py --vendor {deepseek,gemini,chatgpt}`: Playwright attach on
+the existing Default profile; load `workers/selectors/<vendor>.yaml`; assert
+input-box / send-button / last-message selectors present; report heartbeat IDLE.
+NEVER sends a message. `live`-marked test wraps the doctor with skipif env.
+Verify: manual `python scripts/tab_doctor.py --vendor deepseek` ·
+`pytest -q -m "not live"`
+
+## T15 Query Topology view
+Deps: T02, T06
+`GET /api/topology` aggregates `state/logs/routing.jsonl` into
+`{nodes:[{id,count}], edges:[{from,to,count,last_ts}]}`; `/topology` renders a
+no-build SVG graph (nodes = components, edge width = count); dashboard gains a
+"Query Topology" button. Tests: fixture jsonl → exact node/edge counts; `ui`
+test curls the page.
+Verify: `pytest tests/test_topology.py -q` · `make smoke` ·
+`curl -s localhost:3005/topology | grep "Query Topology"`
