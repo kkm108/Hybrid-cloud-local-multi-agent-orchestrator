@@ -1,0 +1,4 @@
+gemini:
+  input_box: "div.ql-editor[contenteditable='true']"
+  send_btn: "button.send-button"
+  last_message: "message-content:last-child"

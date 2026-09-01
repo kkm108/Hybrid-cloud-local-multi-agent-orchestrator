@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "socialai"
+version = "0.1.0"
+description = "Hybrid cloud–local multi-agent orchestrator"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.104",
+    "uvicorn[standard]>=0.24",
+    "pydantic>=2.5",
+    "websockets>=12.0",
+    "jsonschema>=4.20",
+    "httpx>=0.25",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "ruff>=0.1.12",
+]
+gpu = [
+    "torch>=2.1",
+    "transformers>=4.36",
+]
+live = [
+    "playwright>=1.40",
+]
+
+[tool.setuptools]
+packages = ["socialai", "socialai.orchestrator", "socialai.local_llm", "socialai.workers", "socialai.actuators"]
+
+[tool.ruff]
+line-length = 99
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+markers = [
+    "gpu: requires GPU / torch (deselect with -m 'not gpu')",
+    "live: requires real browser tabs (deselect with -m 'not live')",
+    "ui: requires browser UI (deselect with -m 'not ui')",
+    "e2e: end-to-end integration (deselect with -m 'not e2e')",
+]

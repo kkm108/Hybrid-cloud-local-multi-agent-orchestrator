@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SocialAI Manifest",
+  "$id": "https://socialai.local/schemas/manifest.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "description", "agents", "components", "target_recipient"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "description": { "type": "string" },
+    "target_recipient": { "type": "string", "minLength": 1 },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "vendor", "role", "role_prompt"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "kind": { "enum": ["worker_tab", "local_llm"] },
+          "vendor": { "enum": ["deepseek", "gemini", "chatgpt", "mock", "local"] },
+          "role": { "type": "string" },
+          "role_prompt": { "type": "string" }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "kind": {
+            "enum": ["local_llm", "worker_tab", "timer", "browser_bot", "manual_input"]
+          },
+          "assigned_ai": { "type": ["string", "null"] },
+          "config": { "type": "object", "additionalProperties": true },
+          "interval_s": { "type": "number", "minimum": 1 },
+          "trigger": { "type": "string" },
+          "mode": { "enum": ["dry_run", "live"] }
+        }
+      }
+    },
+    "style_rotation": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional novelty-enforcement list for creative campaigns."
+    }
+  }
+}

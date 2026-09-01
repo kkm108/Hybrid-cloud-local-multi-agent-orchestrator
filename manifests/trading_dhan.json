@@ -1,0 +1,39 @@
+{
+  "name": "trading_dhan",
+  "description": "Equity signal watch loop using Dhan data: local analysis with cloud quality-check hop.",
+  "agents": [
+    {
+      "id": "gemini1_1",
+      "kind": "worker_tab",
+      "vendor": "gemini",
+      "role": "analyst",
+      "role_prompt": "You analyze market signals and summarize actionable commentary."
+    }
+  ],
+  "components": [
+    {
+      "id": "local_1",
+      "kind": "local_llm",
+      "assigned_ai": "gemini1_1",
+      "config": {
+        "model": "mock",
+        "device": "cpu"
+      }
+    },
+    {
+      "id": "gemini1_1",
+      "kind": "worker_tab",
+      "assigned_ai": "gemini1_1",
+      "config": {}
+    },
+    {
+      "id": "trading_timer",
+      "kind": "timer",
+      "assigned_ai": "local_1",
+      "config": {},
+      "interval_s": 60,
+      "trigger": "Check latest equity signals from Dhan."
+    }
+  ],
+  "target_recipient": "gemini1_1"
+}

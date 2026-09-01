@@ -1,0 +1,4 @@
+chatgpt:
+  input_box: "#prompt-textarea"
+  send_btn: "button[data-testid='send-button']"
+  last_message: "[data-message-author-role='assistant']:last-child"

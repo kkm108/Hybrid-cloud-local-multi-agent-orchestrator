@@ -1,0 +1,69 @@
+{
+  "name": "poster_designer",
+  "description": "Creative poster-loop: deepseek briefs, chatgpt styles, gemini generates, facebook dry-runs the post. Runs on a timer.",
+  "agents": [
+    {
+      "id": "deepseek_1",
+      "kind": "worker_tab",
+      "vendor": "deepseek",
+      "role": "brief_writer",
+      "role_prompt": "You write concise creative briefs for poster designs."
+    },
+    {
+      "id": "chatgpt_1",
+      "kind": "worker_tab",
+      "vendor": "chatgpt",
+      "role": "style_director",
+      "role_prompt": "You apply visual style direction to a design brief. Include a DO-NOT-copy-previous rule."
+    },
+    {
+      "id": "gemini1_1",
+      "kind": "worker_tab",
+      "vendor": "gemini",
+      "role": "image_generator",
+      "role_prompt": "You describe the poster image and produce an image placeholder reference."
+    }
+  ],
+  "components": [
+    {
+      "id": "deepseek_1",
+      "kind": "worker_tab",
+      "assigned_ai": "deepseek_1",
+      "config": {}
+    },
+    {
+      "id": "chatgpt_1",
+      "kind": "worker_tab",
+      "assigned_ai": "chatgpt_1",
+      "config": {}
+    },
+    {
+      "id": "gemini1_1",
+      "kind": "worker_tab",
+      "assigned_ai": "gemini1_1",
+      "config": {}
+    },
+    {
+      "id": "poster_timer",
+      "kind": "timer",
+      "assigned_ai": "deepseek_1",
+      "config": {},
+      "interval_s": 30,
+      "trigger": "Start a new poster design brief."
+    },
+    {
+      "id": "facebook_post",
+      "kind": "browser_bot",
+      "assigned_ai": "gemini1_1",
+      "config": {},
+      "mode": "dry_run"
+    }
+  ],
+  "target_recipient": "deepseek_1",
+  "style_rotation": [
+    "minimalist",
+    "bold retro",
+    "glassmorphism",
+    "brutalist"
+  ]
+}

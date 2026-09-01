@@ -1,0 +1,31 @@
+{
+  "name": "simpleagent",
+  "description": "Minimal single-agent campaign used by T04 lifecycle tests.",
+  "agents": [
+    {
+      "id": "deepseek_1",
+      "kind": "worker_tab",
+      "vendor": "deepseek",
+      "role": "writer",
+      "role_prompt": "You are a helpful writer."
+    }
+  ],
+  "components": [
+    {
+      "id": "deepseek_1",
+      "kind": "worker_tab",
+      "assigned_ai": "deepseek_1",
+      "config": {}
+    },
+    {
+      "id": "local_1",
+      "kind": "local_llm",
+      "assigned_ai": "deepseek_1",
+      "config": {
+        "model": "mock",
+        "device": "cpu"
+      }
+    }
+  ],
+  "target_recipient": "deepseek_1"
+}

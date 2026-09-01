@@ -1,0 +1,4 @@
+deepseek:
+  input_box: "textarea#chat-input"
+  send_btn: "button[type='submit']"
+  last_message: ".ds-chat-message:last-child"

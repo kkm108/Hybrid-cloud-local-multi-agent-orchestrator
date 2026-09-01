@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SocialAI Control Center</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>SocialAI Control Center</h1>
+      <div class="badges">
+        <span id="badge-campaign" class="badge">Campaign OFF</span>
+        <span id="badge-conn" class="badge">Connecting…</span>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="panel" id="panel-campaign">
+        <h2>Active Campaign</h2>
+        <div id="campaign-meta">
+          <p class="muted">No campaign running.</p>
+        </div>
+        <div class="row">
+          <select id="manifest-select"></select>
+          <button id="btn-launch">Launch</button>
+          <button id="btn-stop" class="danger">Stop</button>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-workers">
+        <h2>Worker Tabs</h2>
+        <ul id="worker-list" class="kv-list"></ul>
+      </section>
+
+      <section class="panel" id="panel-components">
+        <h2>Components</h2>
+        <ul id="component-list" class="kv-list"></ul>
+      </section>
+
+      <section class="panel" id="panel-relay">
+        <h2>Relay Chat</h2>
+        <div id="relay-log" class="log"></div>
+        <div class="row">
+          <select id="relay-recipient"></select>
+          <input id="relay-input" placeholder="Type a message…" />
+          <button id="btn-relay">Send</button>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-templates">
+        <h2>Quick Templates</h2>
+        <div id="template-buttons" class="templates"></div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
