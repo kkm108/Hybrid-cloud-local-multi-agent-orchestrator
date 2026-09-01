@@ -33,3 +33,14 @@ Never rewrite contracts; note and work around minimally.
   `build_topology()`. It aggregates `state/logs/routing.jsonl` into a
   `{nodes, edges}` graph; the app exposes `GET /api/topology` (JSON) and a
   no-build SVG page at `/topology`, plus a dashboard "Query Topology" button.
+
+## T13 — GPU inference environment
+- Validation box runs `torch 2.13.0+cpu` with `torch.cuda.is_available()=False`:
+  CUDA is unavailable here, so the §6 CPU-fallback path was exercised and
+  validated instead of CUDA.
+- Baselines (CPU, `Qwen/Qwen2.5-0.5B-Instruct`): weight-load **124.17 s**,
+  generate **5.05 s / 27 tokens** (max_tokens 32).
+- transformers 5.x emits deprecation warnings (generation_config merge,
+  BPE clean-up) — non-blocking, output correct; no code fix warranted.
+- The CUDA path is untested on this machine; validating it requires an
+  operational (non-`+cpu`) torch reinstall.
