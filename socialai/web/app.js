@@ -215,6 +215,12 @@ function wireActions() {
     });
     tplBox.appendChild(btn);
   });
+
+  $("#btn-topology").addEventListener("click", () => {
+    api("/api/topology").then(() => {
+      window.open("/topology", "_blank");
+    });
+  });
 }
 
 refreshManifests();

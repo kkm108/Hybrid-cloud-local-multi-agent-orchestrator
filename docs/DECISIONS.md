@@ -27,3 +27,9 @@ Never rewrite contracts; note and work around minimally.
 - Fixed `FacebookActuator._dry_run`: the on-disk outbox payload now includes
   `posted: false` and the `outbox` path (previously written before those keys
   were set, so the file lacked them).
+
+## T15 — Query Topology module
+- Added `socialai/orchestrator/topology.py` (not in §3's fixed layout) to host
+  `build_topology()`. It aggregates `state/logs/routing.jsonl` into a
+  `{nodes, edges}` graph; the app exposes `GET /api/topology` (JSON) and a
+  no-build SVG page at `/topology`, plus a dashboard "Query Topology" button.
