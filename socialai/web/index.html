@@ -26,6 +26,10 @@
           <button id="btn-launch">Launch</button>
           <button id="btn-stop" class="danger">Stop</button>
         </div>
+        <div class="row">
+          <button id="btn-edit">Edit</button>
+          <button id="btn-create">Create</button>
+        </div>
       </section>
 
       <section class="panel" id="panel-workers">
@@ -56,6 +60,24 @@
         </div>
       </section>
     </main>
+
+    <div id="manifest-modal" class="modal hidden">
+      <div class="modal-box">
+        <h2>Manifest</h2>
+        <p class="muted" id="modal-schema-hint">
+          Required: name, description, agents[], components[], target_recipient
+          · schema: schemas/manifest.schema.json · keys are strict (extra keys
+          rejected, 422).
+        </p>
+        <textarea id="modal-json" rows="24" spellcheck="false"
+          placeholder='{"name": "example", "description": "", "agents": [], "components": [], "target_recipient": ""}'></textarea>
+        <pre id="modal-error" class="modal-error"></pre>
+        <div class="row">
+          <button id="btn-modal-save">Save</button>
+          <button id="btn-modal-close" class="danger">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <script src="/app.js"></script>
   </body>

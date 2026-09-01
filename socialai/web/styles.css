@@ -115,3 +115,50 @@ button.danger:hover { background: #2a1517; }
 
 .templates { display: flex; flex-wrap: wrap; gap: 8px; }
 .templates button { flex: 0 0 auto; }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal.hidden { display: none; }
+
+.modal-box {
+  width: min(720px, 92vw);
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.modal-box h2 { margin: 0 0 8px; font-size: 15px; }
+
+.modal-box textarea {
+  width: 100%;
+  min-height: 300px;
+  background: #0b0e15;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.modal-error {
+  margin: 8px 0 0;
+  padding: 8px;
+  background: #2a1517;
+  border: 1px solid var(--red);
+  border-radius: 6px;
+  color: #ff9a95;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

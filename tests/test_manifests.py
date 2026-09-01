@@ -90,6 +90,27 @@ class TestCrud:
         assert r.status_code == 200
         assert (mdir / "test_camp.json").is_file()
 
+    def test_post_create_or_update_happy_path(self, isolated) -> None:
+        c, _ = isolated
+        first = c.post("/api/manifests", json={"payload": _VALID})
+        assert first.status_code == 200
+        updated = json.loads(json.dumps(_VALID))
+        updated["description"] = "updated desc"
+        second = c.post("/api/manifests", json={"payload": updated})
+        assert second.status_code == 200
+        assert c.get("/api/manifests/test_camp").json()["description"] == "updated desc"
+
+    def test_post_unknown_key_422_verbatim(self, isolated) -> None:
+        c, _ = isolated
+        bad = json.loads(json.dumps(_VALID))
+        bad["surprise"] = True
+        r = c.post("/api/manifests", json={"payload": bad})
+        assert r.status_code == 422
+        body = r.json()
+        assert body["detail"].startswith("schema violation:")
+        assert "surprise" in body["detail"]
+        assert (r.text.startswith('{"detail":'))
+
     def test_create_invalid_manifest_422(self, isolated) -> None:
         c, _ = isolated
         bad = json.loads(json.dumps(_VALID))
@@ -140,6 +161,27 @@ class TestCrud:
     def test_delete_missing_404(self, isolated) -> None:
         c, _ = isolated
         assert c.delete("/api/manifests/ghost").status_code == 404
+
+
+class TestUi:
+    @pytest.mark.ui
+    def test_manifest_modal_markup_and_wiring_hooks(self) -> None:
+        app = build_app()
+        with TestClient(app) as c:
+            page = c.get("/")
+            assert page.status_code == 200
+            text = page.text
+            assert "manifest-modal" in text
+            for hook in (
+                "modal-json",
+                "modal-error",
+                "modal-schema-hint",
+                "btn-modal-save",
+                "btn-modal-close",
+                "btn-edit",
+                "btn-create",
+            ):
+                assert hook in text, hook
 
 
 class TestSeeds:

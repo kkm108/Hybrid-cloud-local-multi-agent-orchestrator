@@ -174,6 +174,60 @@ async function refreshManifests() {
   }
 }
 
+function openManifestModal(name) {
+  const modal = $("#manifest-modal");
+  const jsonEl = $("#modal-json");
+  const errEl = $("#modal-error");
+  modal.classList.remove("hidden");
+  errEl.textContent = "";
+  if (name) {
+    api(`/api/manifests/${encodeURIComponent(name)}`).then((detail) => {
+      jsonEl.value = JSON.stringify(detail, null, 2);
+    });
+  } else {
+    jsonEl.value = "";
+  }
+}
+
+async function saveManifest() {
+  const jsonEl = $("#modal-json");
+  const errEl = $("#modal-error");
+  let payload;
+  try {
+    payload = JSON.parse(jsonEl.value);
+  } catch (e) {
+    errEl.textContent = `invalid JSON: ${e.message}`;
+    return;
+  }
+  try {
+    const res = await fetch("/api/manifests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payload }),
+    });
+    if (!res.ok) {
+      errEl.textContent = await res.text();
+      return;
+    }
+    $("#manifest-modal").classList.add("hidden");
+    refreshManifests();
+  } catch (e) {
+    errEl.textContent = `request failed: ${e.message}`;
+  }
+}
+
+function wireModal() {
+  $("#btn-edit").addEventListener("click", () => {
+    const name = $("#manifest-select").value;
+    if (name) openManifestModal(name);
+  });
+  $("#btn-create").addEventListener("click", () => openManifestModal(null));
+  $("#btn-modal-save").addEventListener("click", saveManifest);
+  $("#btn-modal-close").addEventListener("click", () => {
+    $("#manifest-modal").classList.add("hidden");
+  });
+}
+
 function wireActions() {
   $("#btn-launch").addEventListener("click", async () => {
     const name = $("#manifest-select").value;
@@ -227,4 +281,5 @@ refreshManifests();
 refresh();
 setInterval(refresh, 3000);
 wireActions();
+wireModal();
 openSocket();
