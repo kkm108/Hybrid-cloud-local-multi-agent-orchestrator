@@ -1,11 +1,11 @@
-"""Facebook posting actuator (§11).
+"""Twitter/X posting actuator (§11).
 
 Posting is modeled as pure state-machine steps: ``compose → type → attach →
 post``. DRY-RUN (the default) writes the final payload to ``outbox/<ts>.json``
 and performs **zero** network I/O — the dry-run code path never imports any
-networking module. LIVE posting requires BOTH ``SOCIALAI_LIVE=1`` in the
-environment AND a per-call confirm token; either is missing and the actuator
-raises (human hold, §11).
+networking module. LIVE posting uses the shared §11 safety gate
+(``socialai.actuators.safety.assert_live_authorized``): BOTH ``SOCIALAI_LIVE=1``
+AND a per-call confirm token are required, else ``ActuatorError``.
 """
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ class PostStep(str, Enum):
     POST = "post"
 
 
-class FacebookActuator:
-    """Pure-step Facebook poster with a hard dry-run default."""
+class TwitterActuator:
+    """Pure-step Twitter/X poster with a hard dry-run default."""
 
     def __init__(self, mode: str = "dry_run", outbox_dir: str = "outbox") -> None:
         if mode not in ("dry_run", "live"):
@@ -58,7 +58,8 @@ class FacebookActuator:
         """Step 4: finalize the post.
 
         DRY-RUN writes ``outbox/<ts>.json`` with zero network I/O.
-        LIVE requires ``SOCIALAI_LIVE=1`` AND a per-call ``confirm`` token.
+        LIVE requires ``SOCIALAI_LIVE=1`` AND a per-call ``confirm`` token
+        (shared §11 gate in ``socialai.actuators.safety``).
         """
         self.steps.append({"step": PostStep.POST})
         payload = self._build_payload()
@@ -80,6 +81,7 @@ class FacebookActuator:
             elif s["step"] == PostStep.ATTACH:
                 media_ref = s.get("media_ref")
         return {
+            "platform": "twitter",
             "text": text,
             "image_ref": image_ref,
             "media_ref": media_ref,
@@ -106,7 +108,7 @@ class FacebookActuator:
         import httpx  # noqa: PLC0415
 
         client = httpx.Client()
-        # Skeleton live publish — replace with the real FB API call when LIVE=1.
+        # Skeleton live publish — replace with the real X API call when LIVE=1.
         client.close()
         payload["posted"] = True
         return payload
