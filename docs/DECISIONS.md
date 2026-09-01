@@ -44,3 +44,12 @@ Never rewrite contracts; note and work around minimally.
   BPE clean-up) — non-blocking, output correct; no code fix warranted.
 - The CUDA path is untested on this machine; validating it requires an
   operational (non-`+cpu`) torch reinstall.
+
+## T16 — Windows runner parity
+- The box lacks make/curl, so `scripts/make.ps1` is the canonical Windows
+  runner: it mirrors all §13 targets (test, lint, smoke, backup, consult,
+  restore `BUNDLE=<zip>`) with faithful child exit codes and a `--dry-run`
+  that prints the resolved command without executing. `make.cmd` is a thin
+  shim forwarding all args. §13 semantics unchanged.
+- `pyproject.toml` gains `[tool.ruff] extend-exclude = ["*.ps1", "*.cmd"]` so the
+  runner sources are not parsed as Python by the `lint` target.

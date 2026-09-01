@@ -35,6 +35,7 @@ packages = ["socialai", "socialai.orchestrator", "socialai.local_llm", "socialai
 [tool.ruff]
 line-length = 99
 target-version = "py311"
+extend-exclude = ["*.ps1", "*.cmd"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
