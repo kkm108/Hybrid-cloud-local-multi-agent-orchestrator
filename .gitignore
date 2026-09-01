@@ -8,3 +8,5 @@ dist/
 build/
 .ruff_cache/
 .pytest_cache/
+socialai-backup-*.zip
+socialai-consult-*.zip
