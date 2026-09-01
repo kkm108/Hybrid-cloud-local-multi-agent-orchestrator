@@ -122,3 +122,33 @@ no-build SVG graph (nodes = components, edge width = count); dashboard gains a
 test curls the page.
 Verify: `pytest tests/test_topology.py -q` · `make smoke` ·
 `curl -s localhost:3005/topology | grep "Query Topology"`
+
+## T16 Windows runner parity
+Deps: T01
+`scripts/make.ps1` implementing the §13 targets (test, lint, smoke, backup,
+consult, restore BUNDLE=...) with faithful exit codes, plus `--dry-run` that
+prints the resolved command without executing; `make.cmd` shim forwarding args.
+DECISIONS.md note: box lacks make/curl; make.ps1 is the canonical Windows runner,
+§13 semantics unchanged. tests/test_runners.py: dry-run prints correct mapping
+for all six targets; real subprocess run of `make.ps1 lint` exits 0.
+Verify: `powershell -NoProfile -File scripts/make.ps1 --dry-run test` ·
+`pytest tests/test_runners.py -q`
+
+## T17 Manifest Edit UI wiring
+Deps: T06, T07
+Studio Edit/Create buttons open a no-build modal (JSON textarea + schema hint);
+POST to /api/manifests (create or update); 422 body rendered inline verbatim;
+Launch/Delete already wired stay unchanged. Extend tests/test_manifests.py:
+update happy path + 422 on unknown key (§7/T07 strictness). `ui` test asserts
+modal markup + wiring hooks present at /.
+Verify: `pytest tests/test_manifests.py -q` · smoke equivalent ·
+page grep "manifest-modal"
+
+## T18 Restore drill + runbook
+Deps: T11
+docs/RESTORE_DRILL.md: real-second-machine checklist (copy bundle to laptop,
+restore, smoke, then T14 doctor when Brave closed). scripts/drill.py automates
+the local simulation: backup -> sandbox tmp "machine" (isolated cwd/HOME) ->
+restore -> smoke-green inside restored tree -> bundle manifest equality assert.
+tests/test_drill.py runs the simulation end-to-end.
+Verify: `pytest tests/test_drill.py -q` · manual laptop checklist deferred.
