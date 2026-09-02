@@ -152,3 +152,33 @@ the local simulation: backup -> sandbox tmp "machine" (isolated cwd/HOME) ->
 restore -> smoke-green inside restored tree -> bundle manifest equality assert.
 tests/test_drill.py runs the simulation end-to-end.
 Verify: `pytest tests/test_drill.py -q` · manual laptop checklist deferred.
+
+## T19 Twitter/X actuator (dry-run first)
+
+Deps: T04
+`actuators/twitter.py` posting state machine (compose→type→attach→post) as pure
+steps; DRY-RUN writes `outbox/<ts>.json`; LIVE gate §11. If the live-gate and
+confirm-token logic from T09 is not already in a shared helper, extract it to
+a shared module now so both actuators share the exact same safety gate.
+Test: dry-run produces payload, asserts zero network imports/calls; LIVE
+without token raises.
+Verify: `pytest tests/test_twitter.py -q`
+
+## T20 CLI-agent bridge (plan-mode first)
+
+Deps: T04, T05, T07
+Introduce a `cli_agent` component kind. Per §0 rule 2, do NOT modify AGENTS.md
+text (§2/§8); instead, update `schemas/manifest.schema.json` to allow
+`kind: "cli_agent"` (preventing T07 422s) and record the semantic addition and
+§3 layout deviation (`socialai/cli_agents/`) in `docs/DECISIONS.md`.
+Build a pluggable adapter mirroring `socialai/workers/`: `socialai/cli_agents/bridge.py`
+(attach/send/read/heartbeat), `mock.py` (scripted replies), and
+`selectors/claude.yaml` (binary, print/resume flags, JSON fields). Reference
+impl: `claude -p <body> --output-format json --resume <id>`.
+Safety (§11): defaults to `plan` permission mode (propose only). Switching to
+`acceptEdits` or `--allowedTools` requires env `SOCIALAI_CLI_EXECUTE=1`; no
+adapter may pass `bypassPermissions`.
+Tests: mock adapter round-trips `[SEND_TO: cli_agent_1]`; plan-mode default
+asserted; execute mode without env raises. Real-binary test marked `live`.
+Verify: `pytest tests/test_cli_agent.py -q -m "not live"` · ruff clean ·
+DECISIONS.md updated with schema/§3 deviations and a brief real-worker transcript.
