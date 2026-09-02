@@ -1,6 +1,10 @@
-"""T08: Timer component scheduler tests (injectable clock, kill switch)."""
+"""T08/T20: Timer component scheduler tests (injectable clock, kill switch, launch wiring)."""
 
+from socialai import state as state_mod
+from socialai.orchestrator.campaigns import launch
+from socialai.orchestrator.components import ComponentRegistry
 from socialai.orchestrator.timer import TimerScheduler
+from socialai.router import Router
 
 
 class FakeClock:
@@ -120,3 +124,62 @@ class TestRegistration:
         s.add("t2", interval_s=2.0, trigger="y", assigned_ai="a_2")
         s.clear()
         assert s.timers == {}
+
+
+class TestLaunchWiring:
+    def test_launch_registers_timers_on_scheduler(self, tmp_path) -> None:
+        """launch() wires timer components into the scheduler and they fire."""
+        state_mod.set_state_dir(tmp_path / "state")
+        state_mod.reset_state()
+        log_path = tmp_path / "logs" / "routing.jsonl"
+        registry = ComponentRegistry(Router(log_path=log_path))
+        clock = FakeClock(0.0)
+        fired: list[tuple[str, str]] = []
+        scheduler = _scheduler(clock, lambda ai, tr: fired.append((ai, tr)))
+
+        result = launch("poster_designer", registry, scheduler=scheduler)
+        assert result["status"] == "RUNNING"
+        assert result["name"] == "poster_designer"
+
+        # Timer component registered on the scheduler.
+        assert "poster_timer" in scheduler.timers
+        t = scheduler.timers["poster_timer"]
+        assert t["interval_s"] == 30.0
+        assert t["assigned_ai"] == "deepseek_1"
+        assert t["trigger"] == "Start a new poster design brief."
+        assert t["next_fire"] == 30.0
+
+        # Timer does not fire before the interval.
+        clock.advance(29.0)
+        scheduler.tick()
+        assert fired == []
+
+        # Timer fires at the scheduled time.
+        clock.advance(1.0)
+        scheduler.tick()
+        assert fired == [("deepseek_1", "Start a new poster design brief.")]
+
+    def test_launch_with_no_scheduler_skips_timer(self, tmp_path) -> None:
+        """launch() without a scheduler still succeeds (no-op for timers)."""
+        state_mod.set_state_dir(tmp_path / "state")
+        state_mod.reset_state()
+        log_path = tmp_path / "logs" / "routing.jsonl"
+        registry = ComponentRegistry(Router(log_path=log_path))
+        result = launch("poster_designer", registry, scheduler=None)
+        assert result["status"] == "RUNNING"
+
+    def test_stop_clears_all_timers(self, tmp_path) -> None:
+        """stop() clears every timer on the scheduler."""
+        from socialai.orchestrator.campaigns import stop as campaign_stop
+
+        state_mod.set_state_dir(tmp_path / "state")
+        state_mod.reset_state()
+        log_path = tmp_path / "logs" / "routing.jsonl"
+        registry = ComponentRegistry(Router(log_path=log_path))
+        clock = FakeClock(0.0)
+        scheduler = _scheduler(clock)
+
+        launch("poster_designer", registry, scheduler=scheduler)
+        assert "poster_timer" in scheduler.timers
+        campaign_stop(scheduler=scheduler)
+        assert scheduler.timers == {}
