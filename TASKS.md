@@ -182,3 +182,25 @@ Tests: mock adapter round-trips `[SEND_TO: cli_agent_1]`; plan-mode default
 asserted; execute mode without env raises. Real-binary test marked `live`.
 Verify: `pytest tests/test_cli_agent.py -q -m "not live"` · ruff clean ·
 DECISIONS.md updated with schema/§3 deviations and a brief real-worker transcript.
+
+## T21 CLI-agent bridge (plan-mode first)
+
+Deps: T04, T05, T07
+New `cli_agent` component kind — extends AGENTS.md §2/§8 and
+`schemas/manifest.schema.json`'s kind enum, so note it in `docs/DECISIONS.md`
+(operating rule 2: this grows the standing contract, it isn't just built
+against it). Pluggable per-CLI adapter (binary, print/resume/output-format
+flags, result + session_id JSON field names) mirroring
+`workers/selectors/*.yaml`; ship a Claude Code adapter (`claude -p <body>
+--output-format json --resume <id>`) as the reference implementation.
+`cli_agents/bridge.py` mirrors the worker-tab bridge's attach/send/read/
+heartbeat shape (T05); `cli_agents/mock.py` scripted replies for default
+test runs. Defaults to `plan` permission mode (propose only); switching to
+`acceptEdits` or a scoped `--allowedTools` list requires env
+`SOCIALAI_CLI_EXECUTE=1`, mirroring §11 — no adapter may pass
+`bypassPermissions`. Test: mock adapter round-trips a `[SEND_TO: cli_agent_1]`
+dispatch to an ack; plan-mode-by-default is asserted; execute mode without
+the env var raises. Real-binary test marked `live`.
+Verify: `pytest tests/test_cli_agent.py -q -m "not live"` · manual: write
+`docs/T21_REPORT.md` (what was built, one real worker-tab → cli_agent →
+worker-tab transcript, current permission-mode default) for review.
