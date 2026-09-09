@@ -204,3 +204,18 @@ the env var raises. Real-binary test marked `live`.
 Verify: `pytest tests/test_cli_agent.py -q -m "not live"` · manual: write
 `docs/T21_REPORT.md` (what was built, one real worker-tab → cli_agent →
 worker-tab transcript, current permission-mode default) for review.
+
+## T22 GitHub Actions CI (lint + test + smoke, ubuntu/windows)
+
+Deps: T04, T16
+`.github/workflows/ci.yml` on push/PR to `main` (+ manual dispatch): install
+(`pip install -e ".[dev]"`), `ruff check .`, `pytest -q -m "not gpu and not
+live and not ui"` (mirrors the Makefile `test` target verbatim) — run
+directly on ubuntu-latest, and via `scripts/make.ps1 lint`/`test`/`smoke`
+(T16) on windows-latest, so every push re-validates Windows parity itself,
+not just the underlying commands twice. `python -m socialai.cli --smoke`
+closes both jobs. No GPU/live/UI markers ever run in CI.
+Verify: `ruff check .` and `pytest -q -m "not gpu and not live and not ui"`
+pass locally (already true per T20/T21) — that's necessary but not
+sufficient; the actual proof is a green run on both jobs under the repo's
+**Actions** tab after this file is pushed.
