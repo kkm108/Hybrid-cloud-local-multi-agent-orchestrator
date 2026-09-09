@@ -63,3 +63,23 @@ Never rewrite contracts; note and work around minimally.
   `-File` scripts do not bind named switches.
 - `ruff` `extend-exclude` covers `*.ps1` / `*.cmd` (see "T16 — Windows runner
   parity").
+
+## T22/afaa0ce — mixed commit: drill fidelity fix
+- Commit `afaa0ce` ("T22: GitHub Actions CI workflow + drill fidelity fix")
+  bundles two unrelated deliverables: the CI workflow file and a
+  restore-drill regression fix. The drill fix deserved a separate commit
+  but was folded in to unblock T22's verify block.
+- **What the drill fix changed**: `scripts/drill.py` now calls
+  `restore.py --no-smoke` (pure restore, no smoke), checks
+  `_tree_matches_manifest` *before* running smoke, then runs smoke
+  separately. This prevents a legitimate post-restore smoke timestamp
+  stamp on `state/PROJECT_STATE.json` from being treated as a checksum
+  mismatch. The report dropped `restore_smoke_ok`; tests removed the
+  corresponding assertion.
+- **Root cause**: when `state/PROJECT_STATE.json` didn't exist at the
+  repo root (pre-T18), the bundle shipped no such file, so the `all()`
+  check over expected keys passed trivially. Once the file was created
+  by earlier root-level test runs and included in the bundle, the
+  post-restore smoke's `set_campaign(None)` rewrote it with a fresh
+  `updated` timestamp, producing a genuine byte mismatch against the
+  bundled copy.
