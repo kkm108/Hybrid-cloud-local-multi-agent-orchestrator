@@ -54,3 +54,28 @@ def test_matches_manifest_detects_drift(tmp_path) -> None:
     path = machine / target
     path.write_text("drift", encoding="utf-8")
     assert _tree_matches_manifest(bundle, machine) is False, "tamper must be detected"
+
+
+def test_matches_manifest_detects_missing_file(tmp_path) -> None:
+    """A manifest-expected file absent from the tree must also fail.
+
+    This is the exact shape of the original T18 bug: ``state/PROJECT_STATE.json``
+    was absent from the bundle when it didn't exist at the repo root, so the
+    old ``all()`` check passed trivially (the key was never in ``expected``).
+    After the file started shipping, the old post-smoke check failed on
+    *mismatch* but the *missing-file* path was never independently tested.
+    """
+    report = run_drill(root=ROOT, tmp_base=tmp_path / "missing")
+    bundle = Path(report["bundle"])
+    machine = Path(report["machine"])
+    assert report["checksums_equal"] is True
+
+    with zipfile.ZipFile(bundle) as zf:
+        manifest = json.loads(zf.read("BUNDLE.json").decode("utf-8"))
+    target = next(
+        a for a in manifest["sha256_manifest"] if a.startswith("manifests/")
+    )
+    # Remove the file entirely from the restored tree.
+    (machine / target).unlink()
+    assert not (machine / target).exists(), "file must be gone before re-check"
+    assert _tree_matches_manifest(bundle, machine) is False, "missing file must be detected"
