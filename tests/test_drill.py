@@ -79,3 +79,39 @@ def test_matches_manifest_detects_missing_file(tmp_path) -> None:
     (machine / target).unlink()
     assert not (machine / target).exists(), "file must be gone before re-check"
     assert _tree_matches_manifest(bundle, machine) is False, "missing file must be detected"
+
+
+def test_drill_main_exits_1_on_corrupted_bundle(tmp_path, monkeypatch) -> None:
+    """End-to-end: drill.main() returns 1 when the bundle drifts from the tree.
+
+    Proves the restructured drill (restore --no-smoke → checksum → smoke)
+    catches real corruption, not just the helper function in isolation.
+    """
+    import subprocess as _subprocess
+
+    from scripts.drill import main as drill_main
+
+    _original_run = _subprocess.run
+    _backup_done = False
+
+    def _intercept(cmd, **kwargs):
+        nonlocal _backup_done
+        result = _original_run(cmd, **kwargs)
+        # After the backup step, corrupt the bundle it produced so the
+        # checksum assert will catch the drift.
+        if not _backup_done and isinstance(cmd, list):
+            cmd_text = " ".join(str(a) for a in cmd)
+            if "backup.py" in cmd_text:
+                _backup_done = True
+                try:
+                    out_dir = Path(cmd[cmd.index("--out") + 1])
+                    for zf_path in out_dir.glob("socialai-backup-*.zip"):
+                        with zipfile.ZipFile(zf_path, "a") as z:
+                            z.writestr("manifests/simpleagent.json", "CORRUPTED")
+                except (ValueError, IndexError):
+                    pass
+        return result
+
+    monkeypatch.setattr("scripts.drill.subprocess.run", _intercept)
+    rc = drill_main(["--out", str(tmp_path / "corrupt_run")])
+    assert rc == 1, "drill must exit 1 when bundle checksums don't match"
