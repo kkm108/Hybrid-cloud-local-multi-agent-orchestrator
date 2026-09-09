@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu:
+    name: test (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install (editable, dev extras)
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Test (default filter — mirrors Makefile's test target)
+        run: pytest -q -m "not gpu and not live and not ui"
+
+      - name: Smoke (mock boot + health + kill switch)
+        run: python -m socialai.cli --smoke
+
+  windows-parity:
+    name: test (windows-latest, via make.ps1)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install (editable, dev extras)
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: powershell -NoProfile -File scripts/make.ps1 lint
+
+      - name: Test
+        run: powershell -NoProfile -File scripts/make.ps1 test
+
+      - name: Smoke
+        run: powershell -NoProfile -File scripts/make.ps1 smoke

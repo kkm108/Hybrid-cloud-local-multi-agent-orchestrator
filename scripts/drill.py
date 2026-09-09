@@ -1,8 +1,13 @@
 """T18: Restore drill — local simulation of a second-machine restore.
 
 Automates: fresh restore bundle -> sandbox tmp "machine" (isolated cwd/HOME)
--> restore.py inside the sandbox -> smoke inside the restored tree -> bundle
-manifest equality assert (BUNDLE.json checksums match the restored files).
+-> ``restore.py --no-smoke`` inside the sandbox -> bundle manifest equality
+assert (BUNDLE.json checksums vs the restored files, BEFORE any smoke runs) ->
+smoke inside the restored tree. Splitting the two is deliberate: manifest
+equality proves *restore fidelity* (bundle -> tree, byte-for-byte), while the
+smoke proves *operability* (the tree boots). A smoke run legitimately stamps
+new state (e.g. ``state/PROJECT_STATE.json`` ``updated``), so it must come
+after the checksum assert, not before.
 
 This mirrors docs/RESTORE_DRILL.md without needing a real second machine.
 """
@@ -78,8 +83,10 @@ def run_drill(root: Path | None = None, tmp_base: Path | None = None) -> dict:
     sandbox_env["HOME"] = str(home_dir)
 
     # 3. restore.py runs inside the sandbox (cwd = machine, isolated HOME).
+    #    --no-smoke: restore only, smoke comes AFTER the checksum assert.
     restore = subprocess.run(
-        [py, str(scripts_dir / "restore.py"), "--bundle", str(bundle), "--target", str(machine)],
+        [py, str(scripts_dir / "restore.py"), "--bundle", str(bundle), "--target", str(machine),
+         "--no-smoke"],
         cwd=str(machine),
         env=sandbox_env,
         capture_output=True,
@@ -89,9 +96,11 @@ def run_drill(root: Path | None = None, tmp_base: Path | None = None) -> dict:
     restore_log = restore.stdout + restore.stderr
     if restore.returncode != 0:
         raise RuntimeError(f"restore step failed:\n{restore_log}")
-    restore_smoke_ok = "smoke: OK" in restore.stdout
 
-    # 4. Smoke equivalent inside the restored tree (isolated cwd/HOME).
+    # 4. Bundle manifest equality — BEFORE smoke, so restored bytes are pure.
+    checksums_equal = _tree_matches_manifest(bundle, machine)
+
+    # 5. Smoke equivalent inside the restored tree (isolated cwd/HOME).
     smoke = subprocess.run(
         [py, "-m", "socialai.cli", "--smoke"],
         cwd=str(machine),
@@ -102,14 +111,11 @@ def run_drill(root: Path | None = None, tmp_base: Path | None = None) -> dict:
     )
     smoke_ok = smoke.returncode == 0
 
-    # 5. Bundle manifest equality: BUNDLE.json checksums vs restored files.
-    checksums_equal = _tree_matches_manifest(bundle, machine)
-
+    # 6. Bundle manifest equality — already done at step 4.
     return {
         "bundle": bundle,
         "machine": machine,
         "home": home_dir,
-        "restore_smoke_ok": restore_smoke_ok,
         "smoke_ok": smoke_ok,
         "checksums_equal": checksums_equal,
         "restore_log": restore_log,
@@ -130,10 +136,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"bundle:      {report['bundle']}")
     print(f"machine:     {report['machine']}")
     print(f"home:        {report['home']}")
-    print(f"restore:     {'smoke OK' if report['restore_smoke_ok'] else 'smoke FAILED'}")
-    print(f"smoke:       {'OK' if report['smoke_ok'] else 'FAILED'}")
     print(f"checksums:   {'MATCH' if report['checksums_equal'] else 'MISMATCH'}")
-    ok = report["restore_smoke_ok"] and report["smoke_ok"] and report["checksums_equal"]
+    print(f"smoke:       {'OK' if report['smoke_ok'] else 'FAILED'}")
+    ok = report["smoke_ok"] and report["checksums_equal"]
     print(f"drill:       {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
 

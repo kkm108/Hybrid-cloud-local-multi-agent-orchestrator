@@ -14,7 +14,6 @@ def test_drill_end_to_end(tmp_path) -> None:
 
     assert bundle.is_file() and bundle.name.startswith("socialai-backup-")
     assert machine.is_dir(), "sandbox machine must exist"
-    assert report["restore_smoke_ok"] is True
     assert report["smoke_ok"] is True, report.get("restore_log")
     assert report["checksums_equal"] is True
 
